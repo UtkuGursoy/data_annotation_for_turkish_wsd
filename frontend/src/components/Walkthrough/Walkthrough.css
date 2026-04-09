@@ -1,0 +1,89 @@
+/* Container for the side-by-side section */
+.main-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Centers items vertically relative to each other */
+  justify-content: center;
+  width: 95%;
+  max-width: 1400px;
+  gap: 40px;          /* Space between text and image */
+  margin-top: 20px;
+  padding-left: 100px;
+  flex: 1;            /* Takes up the remaining space between title and footer */
+  overflow: hidden;   /* Prevents internal scrolling */
+}
+
+.tight-title {
+  font-size: 26px;      /* Decreased from 32px or 48px */
+  margin: 0;
+  padding: 40px 0;      /* Adds some space at the top and bottom */
+  font-weight: 450;     /* Keeps it bold so it still looks like a title */
+  text-align: center;
+  width: 100%;
+}
+
+/* Left Column Styling */
+.left-column {
+  flex: 1;            /* Takes 40-50% of the width */
+  display: flex;
+  justify-content: flex-end; /* Pushes text box toward the center */
+}
+
+.instruction-box {
+  background-color: #D9D9D9;
+  border: 2px solid #00A3FF;
+  padding: 30px;
+  font-size: 18px;
+  line-height: 1.6;
+  max-width: 500px;   /* Prevents the text from stretching too wide */
+  text-align: left;
+}
+
+/* Right Column Styling */
+.right-column {
+  flex: 1;          /* Gives the image slightly more room than the text */
+  display: flex;
+  justify-content: flex-start;
+}
+
+.image-constrainer-side {
+  max-width: 100%;    /* Ensures it doesn't spill out of its column */
+  max-height: 70vh;   /* Keeps it from pushing the footer down */
+  height: auto;
+  border: 1px solid #ffffff;
+}
+
+/* Footer Buttons (Same as before) */
+.button-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: row;      /* Ensures side-by-side */
+  justify-content: space-between; 
+  align-items: center;      /* THE FIX: Vertically centers the buttons to each other */
+  padding: 60px 60px;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.back-button, .next-button {
+  pointer-events: auto;
+  
+  /* Use a fixed height or consistent padding to ensure they match */
+  height: 40px;             /* Forcing an exact height is the safest way to align */
+  padding: 0 30px;          /* Vertical padding set to 0 since height handles it */
+  
+  background-color: #e1e1e1;
+  border: none;
+  font-size: 18px;
+  font-family: inherit;     /* Ensures they use the same font height */
+  cursor: pointer;
+  
+  display: flex;            /* Internal flex to center text inside button */
+  align-items: center;
+  justify-content: center;
+  
+  margin: 0;                /* Removes any hidden margins pushing them down */
+}

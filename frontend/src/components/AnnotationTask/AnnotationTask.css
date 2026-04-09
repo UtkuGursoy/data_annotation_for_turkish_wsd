@@ -1,0 +1,255 @@
+.task-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 95%;
+  max-width: 1400px;
+  margin: 20px auto 0 auto;
+  flex: 1;            /* Takes up the remaining space between title and footer */
+  overflow: hidden;   /* Prevents internal scrolling */
+  background-color: #ffffff;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.homonym-box {
+  width: 90%;
+  max-width: 1100px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.scenario-section, .choice-section {
+  width: 90%;
+  max-width: 1100px;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.text-left { text-align: left; }
+
+.four-column-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 15px;
+  width: 90%;
+  max-width: 1100px;
+  margin: 30px 0;
+  align-items: end;
+}
+
+.meanings-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  font-size: 0.85rem;
+  padding-bottom: 0px;
+  text-align: left;
+}
+
+.meaning-row {
+  margin-bottom: 0px;
+}
+
+.evaluation-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  text-align: center;
+}
+
+.arrow-down {
+  font-size: 2rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.ending-text {
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.slidebar-container {
+  display: flex;
+  justify-content: center;
+}
+
+.slidebar {
+  display: flex;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.slidebar-slot {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.slidebar-slot:not(:last-child) {
+  border-right: 2px solid #ccc;
+}
+
+.progress-wrapper {
+  width: 94%;
+  max-width: 1400px;
+  height: 35px;
+  background-color: #D9D9D9;
+  position: relative;
+  margin-bottom: 80px; /* Room for footer */
+}
+
+.progress-fill {
+  height: 100%;
+  background-color:#00A3FF; /* Or a light blue if preferred */
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: relative;
+  width: 30%;
+  text-align: center;
+  top: 7px;
+  font-weight: bold;
+}
+
+.fade-in-content {
+  animation: fadeIn 2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(5px); /* Optional: adds a slight upward motion */
+    color: #00A3FF;
+  }
+  50% {
+    color: #00A3FF;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    color: inherit;
+  }
+}
+
+.checkboxes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.never-seen-box,
+.nonsense-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: fit-content;
+}
+
+.never-seen-box label,
+.nonsense-box label {
+  cursor: pointer;
+}
+
+.never-seen-tooltip {
+  position: absolute;
+  top: 50%;
+  left: 100%; /* Pushes the tooltip to the right edge of the text */
+  margin-left: 15px; /* Adds a small gap between the text and the tooltip */
+  transform: translateY(-50%); /* Centers it vertically with the text */
+  background-color: #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+  animation: fadeInTooltipRight 0.2s ease-in-out forwards;
+}
+
+/* The little arrow pointing left towards the text */
+.never-seen-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%; /* Places the arrow on the left edge of the tooltip box */
+  margin-top: -6px; /* Perfectly centers the 6px arrow vertically */
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent #333 transparent transparent; /* Creates a left-pointing triangle */
+}
+
+
+/* Flips the arrow to point right */
+.never-seen-tooltip.tooltip-left::after {
+  left: 100%;
+  right: auto;
+  border-color: transparent transparent transparent #333; 
+}
+
+/* Add this to the bottom of your AnnotationTask.css */
+
+.meaning-tooltip {
+  background-color: #ffffff;
+  /* Change the color value below to your desired text color */
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.meaning-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 30%;
+  transform: translateX(-50%);
+  border-width: 7px;
+  border-style: solid;
+  border-color: #ccc transparent transparent transparent;
+  margin-top: 0;
+}
+
+.meaning-tooltip::after {
+  top: 100%; /* Puts the tail at the bottom of the speech bubble */
+  left: 30%;
+  right: auto;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #ffffff transparent transparent transparent; 
+  margin-top: 0;
+}
+
+
+/* Slides in from the right instead of the left */
+@keyframes fadeInTooltipLeft {
+  from { opacity: 0; transform: translate(5px, -50%); }
+  to { opacity: 1; transform: translate(0, -50%); }
+}
+
+
+/* Custom animation to handle the horizontal slide while staying vertically centered */
+@keyframes fadeInTooltipRight {
+  from { opacity: 0; transform: translate(-5px, -50%); }
+  to { opacity: 1; transform: translate(0, -50%); }
+}
+@keyframes fadeInTooltip {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

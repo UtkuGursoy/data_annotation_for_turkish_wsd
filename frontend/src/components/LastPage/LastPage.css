@@ -1,0 +1,42 @@
+.last-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 93vh;
+}
+
+.last-page-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding-bottom: 15vh;
+}
+
+.last-page-title {
+  text-align: center;
+  width: 100%;
+}
+
+.last-page-form {
+  text-align: center;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -20px;
+}
+
+.last-page-text {
+  font-size: 1.2rem;
+}
+
+.first-text {
+  margin-top: 0;
+}
+
+.finish-button {
+  margin-top: 30px;
+}
