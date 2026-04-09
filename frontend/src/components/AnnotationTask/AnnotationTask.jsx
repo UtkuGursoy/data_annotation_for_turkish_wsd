@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import './AnnotationTask.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://data-annotation-for-turkish-wsd.onrender.com';
+
 // Helper function to highlight the Turkish homonym along with any attached suffixes
 const renderHighlightedSentence = (sentence, homonym) => {
   if (!sentence || !homonym) return sentence;
@@ -137,7 +139,7 @@ const AnnotationTask = ({ tasks, participantData, onFinish, onBack, initialIndex
           timestamp: timestamp
         };
 
-        await fetch('http://localhost:5000/api/save-annotation', {
+        await fetch(`${API_URL}/api/save-annotation`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dataToSave)

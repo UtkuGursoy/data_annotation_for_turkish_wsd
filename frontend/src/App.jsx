@@ -6,6 +6,8 @@ import Walkthrough from './components/Walkthrough/Walkthrough';
 import AnnotationTask from './components/AnnotationTask/AnnotationTask';
 import LastPage from './components/LastPage/LastPage';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://data-annotation-for-turkish-wsd.onrender.com';
+
 function App() {
   const [step, setStep] = useState(1);
   const [participantData, setParticipantData] = useState({
@@ -18,7 +20,7 @@ function App() {
 
   const handleStart = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/init-session', {
+      const response = await fetch(`${API_URL}/api/init-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -31,7 +33,7 @@ function App() {
       const data = await response.json();
       
       // Fetch tasks from the backend instead of local import
-      const tasksResponse = await fetch('http://localhost:5000/api/tasks');
+      const tasksResponse = await fetch(`${API_URL}/api/tasks`);
       const tasksData = await tasksResponse.json();
       const originalTasks = Object.values(tasksData);
       let tasksArray = originalTasks;
