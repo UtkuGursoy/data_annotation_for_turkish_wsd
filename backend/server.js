@@ -167,11 +167,17 @@ app.post('/api/save-annotation', async (req, res) => {
         const { participantName, ...annotationData } = req.body;
         const sanitizedName = sanitizeName(participantName);
         
-        await AnnotationResult.create({
-            participantName,
-            sanitizedName,
-            ...annotationData
-        });
+        await AnnotationResult.findOneAndUpdate(
+            { sanitizedName, sample_id: annotationData.sample_id },
+            { 
+                $set: { 
+                    participantName,
+                    sanitizedName,
+                    ...annotationData 
+                } 
+            },
+            { upsert: true, new: true }
+        );
         
         res.status(200).send("Data saved successfully");
     } catch (error) {

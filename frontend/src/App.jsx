@@ -64,6 +64,9 @@ function App() {
         }
       }
       
+      // Prevent layout corruption by snapping the index to the beginning of the 3-item group
+      nextIndex = Math.floor(nextIndex / 3) * 3;
+      
       if (nextIndex >= tasksArray.length) {
         setStep(4);
         return;
