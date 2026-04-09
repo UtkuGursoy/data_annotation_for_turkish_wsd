@@ -62,6 +62,8 @@ function App() {
         if (lastIdx !== -1) {
           nextIndex = lastIdx + 1;
         }
+      } else if (data.currentIndex !== undefined && data.currentIndex !== null) {
+        nextIndex = data.currentIndex;
       }
       
       // Prevent layout corruption by snapping the index to the beginning of the 3-item group

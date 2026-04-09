@@ -20,7 +20,8 @@ const userSessionSchema = new mongoose.Schema({
     sanitizedName: { type: String, unique: true },
     age: String,
     educationDegree: String,
-    shuffledWords: [Number]
+    shuffledWords: [Number],
+    currentIndex: { type: Number, default: 0 }
 });
 const UserSession = mongoose.model('UserSession', userSessionSchema);
 
@@ -111,16 +112,20 @@ app.post('/api/init-session', async (req, res) => {
                 sanitizedName,
                 age,
                 educationDegree,
-                shuffledWords
+                shuffledWords,
+                currentIndex: 0
             });
             
-            res.status(200).json({ message: "Session created successfully", lastSampleId: null, shuffledWords });
+            res.status(200).json({ message: "Session created successfully", currentIndex: 0, shuffledWords });
         } else {
-            // Find the last sample annotated by this user
-            const lastResult = await AnnotationResult.findOne({ sanitizedName }).sort({ timestamp: -1 });
-            const lastSampleId = lastResult ? lastResult.sample_id : null;
+            let currentIndex = session.currentIndex || 0;
+            // Backwards compatibility: Fallback for older sessions that haven't explicitly saved their index yet
+            if (currentIndex === 0) {
+                const lastResult = await AnnotationResult.findOne({ sanitizedName }).sort({ timestamp: -1 });
+                if (lastResult) return res.status(200).json({ message: "Session already exists", lastSampleId: lastResult.sample_id, shuffledWords: session.shuffledWords });
+            }
             
-            res.status(200).json({ message: "Session already exists", lastSampleId, shuffledWords: session.shuffledWords });
+            res.status(200).json({ message: "Session already exists", currentIndex, shuffledWords: session.shuffledWords });
         }
     } catch (error) {
         console.error(error);
@@ -145,19 +150,40 @@ app.post('/api/init-test-session', async (req, res) => {
                 sanitizedName,
                 age,
                 educationDegree,
-                shuffledWords: sequentialWords
+                shuffledWords: sequentialWords,
+                currentIndex: 0
             });
             
-            res.status(200).json({ message: "Test session created successfully", lastSampleId: null, shuffledWords: sequentialWords });
+            res.status(200).json({ message: "Test session created successfully", currentIndex: 0, shuffledWords: sequentialWords });
         } else {
-            const lastResult = await AnnotationResult.findOne({ sanitizedName }).sort({ timestamp: -1 });
-            const lastSampleId = lastResult ? lastResult.sample_id : null;
-            
-            res.status(200).json({ message: "File already exists", lastSampleId, shuffledWords: session.shuffledWords });
+            let currentIndex = session.currentIndex || 0;
+            if (currentIndex === 0) {
+                const lastResult = await AnnotationResult.findOne({ sanitizedName }).sort({ timestamp: -1 });
+                if (lastResult) return res.status(200).json({ message: "File already exists", lastSampleId: lastResult.sample_id, shuffledWords: session.shuffledWords });
+            }
+            res.status(200).json({ message: "File already exists", currentIndex, shuffledWords: session.shuffledWords });
         }
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+// Endpoint to explicitly track the exact index location
+app.post('/api/update-session-index', async (req, res) => {
+    try {
+        const { participantName, currentIndex } = req.body;
+        const sanitizedName = sanitizeName(participantName);
+        
+        await UserSession.findOneAndUpdate(
+            { sanitizedName },
+            { $set: { currentIndex } }
+        );
+        
+        res.status(200).send("Index updated");
+    } catch (error) {
+        console.error("Error updating index:", error);
+        res.status(500).send("Error updating index");
     }
 });
 

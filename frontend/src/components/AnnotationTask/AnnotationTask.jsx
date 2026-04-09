@@ -152,8 +152,19 @@ const AnnotationTask = ({ tasks, participantData, onFinish, onBack, initialIndex
     setIsSaving(false);
 
     if (currentIndex + 3 < tasks.length) {
-      setCurrentIndex(currentIndex + 3);
+      const nextIdx = currentIndex + 3;
+      setCurrentIndex(nextIdx);
       window.scrollTo(0, 0);
+      
+      // Save progress to the session silently
+      fetch(`${API_URL}/api/update-session-index`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          participantName: participantData?.fullName || "Anonymous", 
+          currentIndex: nextIdx 
+        })
+      }).catch(err => console.error("Failed to update index:", err));
     } else {
       onFinish(answers);
     }
@@ -163,7 +174,18 @@ const AnnotationTask = ({ tasks, participantData, onFinish, onBack, initialIndex
     if (currentIndex === initialIndex) {
       onBack();
     } else {
-      setCurrentIndex(currentIndex - 3);
+      const prevIdx = currentIndex - 3;
+      setCurrentIndex(prevIdx);
+      
+      // Update progress backwards silently
+      fetch(`${API_URL}/api/update-session-index`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          participantName: participantData?.fullName || "Anonymous", 
+          currentIndex: prevIdx 
+        })
+      }).catch(err => console.error("Failed to update index:", err));
     }
   };
 
