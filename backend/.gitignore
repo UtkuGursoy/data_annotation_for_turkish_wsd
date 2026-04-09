@@ -1,0 +1,17 @@
+# Dependency directories
+node_modules/
+
+# Environment variables
+.env
+
+# Application generated files and exports
+annotations/
+annotations_export.json
+chunk_counts.json
+
+# npm/yarn debug logs
+npm-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
