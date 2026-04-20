@@ -4,7 +4,7 @@ const AnnotationSample = require('./models/AnnotationSample');
 const rawData = require('./data/turkish_homonyms.json');
 
 // Replace with your actual MongoDB connection string in your .env file
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/wsd_annotations';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/local_test';
 
 async function seedDatabase() {
   try {
@@ -17,12 +17,15 @@ async function seedDatabase() {
 
     // Clear tracking and result collections for a fresh deployment
     await mongoose.connection.collection('chunkcounts').deleteMany({});
-    await mongoose.connection.collection('usersessions').deleteMany({});
-    await mongoose.connection.collection('annotationresults').deleteMany({});
-    console.log('Cleared chunk counts, user sessions, and annotation results.');
+    // await mongoose.connection.collection('usersessions').deleteMany({});
+    // await mongoose.connection.collection('annotationresults').deleteMany({});
+    console.log('Cleared old chunk counts. Kept existing user sessions and annotation results safe!');
 
-    // Convert the JSON object (where keys are "0", "1", etc.) into an array of objects
-    const samplesArray = Object.values(rawData);
+    // Convert the JSON object into an array while preserving the original keys as 'sample_id'
+    const samplesArray = Object.entries(rawData).map(([key, value]) => ({
+        sample_id: key,
+        ...value
+    }));
 
     // Insert everything into the database
     await AnnotationSample.insertMany(samplesArray);

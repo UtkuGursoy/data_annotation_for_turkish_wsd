@@ -6,7 +6,7 @@ import Walkthrough from './components/Walkthrough/Walkthrough';
 import AnnotationTask from './components/AnnotationTask/AnnotationTask';
 import LastPage from './components/LastPage/LastPage';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://data-annotation-for-turkish-wsd.onrender.com';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function App() {
   const [step, setStep] = useState(1);
@@ -17,8 +17,10 @@ function App() {
   });
   const [startIndex, setStartIndex] = useState(0);
   const [orderedTasks, setOrderedTasks] = useState([]);
+  const [isStarting, setIsStarting] = useState(false);
 
   const handleStart = async () => {
+    setIsStarting(true);
     try {
       const response = await fetch(`${API_URL}/api/init-session`, {
         method: 'POST',
@@ -32,6 +34,11 @@ function App() {
       
       const data = await response.json();
       
+      if (!response.ok) {
+        alert(data.error || "An error occurred starting the session.");
+        return;
+      }
+
       // Fetch tasks from the backend instead of local import
       const tasksResponse = await fetch(`${API_URL}/api/tasks`);
       const tasksData = await tasksResponse.json();
@@ -42,7 +49,9 @@ function App() {
         tasksArray = [];
         for (const wordIdx of data.shuffledWords) {
           for (let i = 0; i < 6; i++) {
-            const task = originalTasks[wordIdx * 6 + i];
+            // Safely grab the task by its exact sample_id key, avoiding array index mismatches!
+            const taskId = String(wordIdx * 6 + i);
+            const task = tasksData[taskId];
             if (task) {
               tasksArray.push(task);
             }
@@ -50,6 +59,12 @@ function App() {
         }
       }
       
+      if (tasksArray.length === 0) {
+        console.error("No tasks found. tasksData:", tasksData, "shuffledWords:", data.shuffledWords);
+        alert("Error: No tasks could be loaded. Please ensure the database is seeded properly and the backend is running.");
+        return;
+      }
+
       // DEV ONLY: Shrink dataset to 3 items to test the finish flow easily
       //tasksArray = tasksArray.slice(0, 3);
 
@@ -75,10 +90,11 @@ function App() {
       }
       
       setStartIndex(nextIndex);
+      setStep(3); // Moved inside the try block so it doesn't trigger on crashes
     } catch (error) {
       console.error("Failed to create or resume session file:", error);
+      alert("Network error: Could not connect to the server.");
     }
-    setStep(3);
   };
 
   return (
@@ -97,6 +113,7 @@ function App() {
         <Walkthrough 
           onStart={handleStart} 
           onBack={() => setStep(1)} 
+          isStarting={isStarting}
         />
       )}
 

@@ -9,9 +9,9 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/wsd_annotations';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/local_test';
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('Connected to MongoDB.'))
+    .then(() => console.log(`Connected to MongoDB at: ${MONGO_URI}`))
     .catch(err => console.error('MongoDB connection error:', err));
 
 // Define Models for Session and Result Tracking
@@ -24,12 +24,6 @@ const userSessionSchema = new mongoose.Schema({
     currentIndex: { type: Number, default: 0 }
 });
 const UserSession = mongoose.model('UserSession', userSessionSchema);
-
-const chunkCountSchema = new mongoose.Schema({
-    chunkIndex: { type: Number, required: true, unique: true },
-    count: { type: Number, default: 0 }
-});
-const ChunkCount = mongoose.model('ChunkCount', chunkCountSchema);
 
 const annotationResultSchema = new mongoose.Schema({
     participantName: String,
@@ -49,8 +43,16 @@ const sanitizeName = (name) => {
                .toLowerCase();
 };
 
+let initSessionLock = false;
+
 // Endpoint to initialize session file
 app.post('/api/init-session', async (req, res) => {
+    // Simple in-memory lock to prevent race conditions during concurrent assignments
+    while (initSessionLock) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    initSessionLock = true;
+
     try {
         const { participantName, age, educationDegree } = req.body;
         const sanitizedName = sanitizeName(participantName);
@@ -63,50 +65,52 @@ app.post('/api/init-session', async (req, res) => {
             const CHUNKS_PER_USER = 50;    
             const MAX_ANNOTATIONS = 5;     
 
-            // 1. Read global chunk counts
-            const counts = await ChunkCount.find({});
-            const countMap = {};
-            counts.forEach(c => { countMap[c.chunkIndex] = c.count; });
+            // 1. Calculate assignments based on existing user sessions
+            const assignmentCounts = new Array(TOTAL_CHUNKS).fill(0);
 
-            // 2. Filter chunks that haven't reached the max annotation limit yet
+            const sessions = await UserSession.find({});
+            sessions.forEach(s => {
+                if (s.shuffledWords) {
+                    s.shuffledWords.forEach(w => {
+                        if (w >= 0 && w < TOTAL_CHUNKS) {
+                            assignmentCounts[w]++;
+                        }
+                    });
+                }
+            });
+
+            // 2. Filter chunks that haven't reached the max assignment limit
             let availableChunks = [];
             for (let i = 0; i < TOTAL_CHUNKS; i++) {
-                const count = countMap[i] || 0;
+                const count = assignmentCounts[i];
                 if (count < MAX_ANNOTATIONS) {
                     availableChunks.push({ index: i, count });
                 }
             }
 
-            // 3. Sort logic: Prioritize chunks with fewer annotations, then randomize
-            availableChunks.sort((a, b) => {
-                if (a.count !== b.count) return a.count - b.count;
-                return Math.random() - 0.5; 
-            });
-
-            // 4. Select exactly 50 chunks for this specific user
-            const selectedChunks = availableChunks.slice(0, CHUNKS_PER_USER);
-            
-            if (selectedChunks.length === 0) {
-                 return res.status(400).json({ error: "No more tasks available. Dataset completed." });
+            if (availableChunks.length < CHUNKS_PER_USER) {
+                 return res.status(400).json({ error: "Not enough tasks available. Dataset might be completed." });
             }
 
-            // 5. Final shuffle
-            selectedChunks.sort(() => Math.random() - 0.5);
-            const shuffledWords = selectedChunks.map(c => c.index);
-
-            // 6. Update and save the global chunk counts tracker
-            const bulkOps = shuffledWords.map(idx => ({
-                updateOne: {
-                    filter: { chunkIndex: idx },
-                    update: { $inc: { count: 1 } },
-                    upsert: true
+            // 3. Shuffle to randomize, then sort by count to prioritize least annotated
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
                 }
-            }));
-            if (bulkOps.length > 0) {
-                await ChunkCount.bulkWrite(bulkOps);
             }
+            
+            shuffleArray(availableChunks);
+            availableChunks.sort((a, b) => a.count - b.count);
 
-            // 7. Save user session data
+            // 4. Select exactly 50 chunks for this user
+            const selectedChunks = availableChunks.slice(0, CHUNKS_PER_USER).map(c => c.index);
+
+            // 5. Final shuffle so the user's tasks are in random order
+            shuffleArray(selectedChunks);
+            const shuffledWords = selectedChunks;
+
+            // 6. Save user session data
             session = await UserSession.create({
                 participantName,
                 sanitizedName,
@@ -116,20 +120,23 @@ app.post('/api/init-session', async (req, res) => {
                 currentIndex: 0
             });
             
-            res.status(200).json({ message: "Session created successfully", currentIndex: 0, shuffledWords });
+            return res.status(200).json({ message: "Session created successfully", currentIndex: 0, shuffledWords });
         } else {
             let currentIndex = session.currentIndex || 0;
-            // Backwards compatibility: Fallback for older sessions that haven't explicitly saved their index yet
             if (currentIndex === 0) {
                 const lastResult = await AnnotationResult.findOne({ sanitizedName }).sort({ timestamp: -1 });
-                if (lastResult) return res.status(200).json({ message: "Session already exists", lastSampleId: lastResult.sample_id, shuffledWords: session.shuffledWords });
+                if (lastResult) {
+                    return res.status(200).json({ message: "Session already exists", lastSampleId: lastResult.sample_id, shuffledWords: session.shuffledWords });
+                }
             }
             
-            res.status(200).json({ message: "Session already exists", currentIndex, shuffledWords: session.shuffledWords });
+            return res.status(200).json({ message: "Session already exists", currentIndex, shuffledWords: session.shuffledWords });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Internal Server Error" });
+        return res.status(500).json({ error: "Internal Server Error" });
+    } finally {
+        initSessionLock = false;
     }
 });
 

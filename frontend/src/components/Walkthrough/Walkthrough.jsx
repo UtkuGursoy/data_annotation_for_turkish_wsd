@@ -1,6 +1,34 @@
+import { useState, useEffect } from 'react';
 import './Walkthrough.css';    
 
-const Walkthrough = ({ onStart, onBack }) => {
+const Walkthrough = ({ onStart, onBack, isStarting }) => {
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  const loadingMessages = [
+    "Please wait, data samples are being prepared...",
+    "Be patient, this could take a couple of seconds...",
+    "Setting up your annotation suite...",
+    "Almost ready..."
+  ];
+
+  useEffect(() => {
+    let interval;
+    if (isStarting) {
+      interval = setInterval(() => {
+        setMessageIndex((prevIndex) => {
+          if (prevIndex >= loadingMessages.length - 1) {
+            clearInterval(interval);
+            return prevIndex;
+          }
+          return prevIndex + 1;
+        });
+      }, 5000); // Changes message every 5 seconds
+    } else {
+      setMessageIndex(0); // Reset if it stops loading
+    }
+    return () => clearInterval(interval);
+  }, [isStarting]);
+
   return (
     <div className="page-container">
       {/* Title stays at the very top */}
@@ -46,11 +74,18 @@ const Walkthrough = ({ onStart, onBack }) => {
 
       {/* Footer stays pinned to bottom corners */}
       <div className="button-footer">
-        <button className="back-button" onClick={onBack}>
+        <button className="back-button" onClick={onBack} disabled={isStarting}>
           Back
         </button>
-        <button className="next-button" onClick={onStart}>
-          Start
+        
+        {isStarting && (
+          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', fontStyle: 'italic', color: '#555', fontSize: '16px', whiteSpace: 'nowrap' }}>
+            {loadingMessages[messageIndex]}
+          </div>
+        )}
+
+        <button className="next-button" onClick={onStart} disabled={isStarting}>
+          {isStarting ? 'Preparing...' : 'Start'}
         </button>
       </div>
     </div>

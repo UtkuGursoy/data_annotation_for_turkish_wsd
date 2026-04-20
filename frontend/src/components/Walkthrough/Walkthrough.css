@@ -87,3 +87,8 @@
   
   margin: 0;                /* Removes any hidden margins pushing them down */
 }
+
+.back-button:disabled, .next-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
